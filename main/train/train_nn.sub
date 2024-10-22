@@ -1,0 +1,13 @@
+executable = ${HOME}/neutrino_interaction_CNN/singularity_files/singularity_wrapper.sh
+arguments  = ${HOME}/neutrino_interaction_CNN/singularity_files/v14_latest.sif ${HOME}/neutrino_interaction_CNN/main/train/train_model_1 python3.6 ${HOME}/neutrino_interaction_CNN/main/train_nn.py
+output     = dwmodel.out
+error      = dwmodel.err
+log        = dwmodel.log
+getenv     = True
+
+request_cpus   = 4
+request_memory = 16 GB
+
+Requirements = TARGET.vm_name == "its-u20-nfs-20210413"
+
+queue 

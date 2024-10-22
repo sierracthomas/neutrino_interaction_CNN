@@ -22,6 +22,12 @@ from torch.utils.data import Dataset
 import torch.nn.functional as F
 from glob import glob
 from PIL import Image
+import argparse
+
+parser = argparse.ArgumentParser(description='Generate confusion matrices', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("--testing", type = str, default = "../../datasets/testing/", help = "Testing directory")
+parser.add_argument("--training", type = str, default = "../../datasets/training/", help = "Training directory")
+args = parser.parse_args()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 criterion = nn.CrossEntropyLoss()
@@ -36,13 +42,13 @@ if get_paths:
     testing_data_files = []
     training_data_files = []
     # get lengths of arrays in advance!
-    for filename in os.listdir("testing1000/"):
-        f = os.path.join(os.getcwd(), "testing1000/" + filename)
+    for filename in os.listdir(args.testing):
+        f = os.path.join(os.getcwd(), args.testing + filename)
         if os.path.isfile(f):
             if f[-len("labels.npy"):] == "labels.npy":
                 testing_data_files.append(f)
-    for filename in os.listdir("training/"):
-        f = os.path.join(os.getcwd(), "training/" + filename)
+    for filename in os.listdir(args.training):
+        f = os.path.join(os.getcwd(), args.training + filename)
         if os.path.isfile(f):
             if f[-len("labels.npy"):] == "labels.npy":
                 training_data_files.append(f)
@@ -251,52 +257,3 @@ for current_model in current_model_list:
     
 
 exit()
-
-image_directory = '/home/sthoma31/neutrino_interaction_images/array_generator/train_nn/modeldw_run1/'
-ext = '*.png'#('*.jpg','*.png','*.gif')
-pdf = FPDF()
-imagelist=[]
-for infile in sorted(glob.glob(os.path.join(image_directory,ext)), key=numericalSort):
-    #print("Current File Being Processed is: ", infile)
-    #current_model = infile
-    imagelist.extend(glob.glob(os.path.join(image_directory,ext)))
-
-#for ext in extensions:
-#    imagelist.extend(glob.glob(os.path.join(image_directory,ext)))
-print(imagelist)
-
-
-"""for infile in sorted(glob.glob('*.pt'), key=numericalSort):
-    print("Current File Being Processed is: ", infile)
-    current_model = infile
-
-for ext in extensions:
-    imagelist.extend(glob.glob(os.path.join(image_directory,ext)))"""
-
-print(imagelist)
-for imageFile in imagelist:
-    cover = Image.open(imageFile)
-    width, height = cover.size
-
-    # convert pixel in mm with 1px=0.264583 mm
-    width, height = float(width * 0.264583), float(height * 0.264583)
-
-    # given we are working with A4 format size 
-    pdf_size = {'P': {'w': 210, 'h': 297}, 'L': {'w': 297, 'h': 210}}
-
-    # get page orientation from image size 
-    orientation = 'P' if width < height else 'L'
-
-    #  make sure image size is not greater than the pdf format size
-    width = width if width < pdf_size[orientation]['w'] else pdf_size[orientation]['w']
-    height = height if height < pdf_size[orientation]['h'] else pdf_size[orientation]['h']
-
-    pdf.add_page(orientation=orientation)
-    pdf.set_font("Arial", "B",8)
-    pdf.image(imageFile, 0, 0, width, height)
-    #pdf.write(5, str(imageFile))
-pdf.output(image_directory + "testfile1.pdf", "F")
-
-
-
-

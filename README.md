@@ -9,3 +9,7 @@
 `main` contains:
 1. `train` which has submit scripts for training models
 2. `test` which contains code to produce confusion matrices 
+
+`singularity_files` contains: 
+1. `singularity_wrapper.sh` which will run your script in a singularity shell
+2. place your singularity container here as well

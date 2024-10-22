@@ -1,5 +1,5 @@
-executable = /home/sthoma31/neutrino_interaction_images/array_generator/singularity_wrapper.sh
-arguments  = /home/sthoma31/v14_latest.sif /home/sthoma31/neutrino_interaction_images/array_generator python3.6 array_generator.py --directory /home/sthoma31/neutrino_interaction_images/array_generator/nue_10_7 --out_directory /home/sthoma31/neutrino_interaction_images/array_generator/nue_10_7 --interaction_type 'nuecc'
+executable = ${HOME}/neutrino_interaction_CNN/singularity_files/singularity_wrapper.sh
+arguments  = ${HOME}/neutrino_interaction_CNN/singularity_files/v14_latest.sif ${HOME}/neutrino_interaction_CNN/datasets/array_generator/ python3.6 array_generator.py --directory ${HOME}/neutrino_interaction_CNN/datasets/array_generator/nue --out_directory ${HOME}/neutrino_interaction_CNN/datasets/array_generator/nue --interaction_type 'nuecc'
 output     = nuecc.out
 error      = nuecc.err
 log        = nuecc.log

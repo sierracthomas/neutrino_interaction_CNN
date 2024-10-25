@@ -60,13 +60,14 @@ mc_hdr = ['event_id','vertex_id','x_vert','y_vert','z_vert','t_vert','target','r
 
 inverse_reaction_map = {v: k for k, v in genie_reaction_map.items()}
 
+
 interaction_type_map = {
-    'nuenc' : 0, 
-    'nuecc' : 1, 
-    'numunc' : 2, 
-    'numucc' : 3
+    'nuecc' : 0, 
+    'numucc' : 1, 
+    'nuenc' : 2, 
+    'numunc' : 2
 }
-    
+
 # check if interaction is nc or cc
 check_type = {
     'nuecc' : lambda num: myfile['mc_hdr'][num][8] == True, 

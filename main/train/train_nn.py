@@ -25,6 +25,7 @@ from torch.utils.data import Dataset
 
 from glob import glob
 from PIL import Image
+import random
 
 homedir = "/home/sthoma31"
 
@@ -33,8 +34,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser(description='Train a convolutional neural network for neutrino interactions. ', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--seed", type = int, default = 5, help = "Set random seed")
 #parser.add_argument("--image_dir", type = str, default = "/home/sthoma31/neutrino_interaction_images/nu_mu_700/data/QES", nargs='*', help = "Location that contains interaction folders CC and NC")
-parser.add_argument("--numu_folder", type = str, default = f"{homedir}/neutrino_interaction_CNN/datasets/array_generator/numu", nargs='*', help = "Name of folder containing Nu_mu interactions")
-parser.add_argument("--nue_folder", type = str, default = f"{homedir}/neutrino_interaction_CNN/datasets/array_generator/nue", nargs='*', help = "Name of folder containing Nue interactions")
+parser.add_argument("--numu_folder", type = str, default = f"/home/sthoma31/neutrino_interaction_images/array_generator/numu_10_22", nargs='*', help = "Name of folder containing Nu_mu interactions")
+parser.add_argument("--nue_folder", type = str, default = f"/home/sthoma31/neutrino_interaction_images/array_generator/nue_10_22", nargs='*', help = "Name of folder containing Nue interactions")
 parser.add_argument("--batch_size", type = int, default = 128, help = "Batch size when training")
 #parser.add_argument("--training_data_size", type = int, default = 4000, help = "Size of training data")
 parser.add_argument("--epoch", type = int, default = 20, help = "Number of epochs when training")
@@ -43,11 +44,12 @@ parser.add_argument("--png_header", type = str, default = "trial", help = "Heade
 parser.add_argument("--plot_freq", type = int, default = 5, help = "Plot confusion matrices every {plot_freq} times")
 parser.add_argument("--model_name", type = str, default = "run_number_1", help = "Name of model to save as")
 parser.add_argument("--model_file", type = str, default = "modeldw", help = "Model to use to train")
-parser.add_argument("--move_files", type = bool, default = False, help = "Sort into testing and training files")
-parser.add_argument("--training_size", type = int, default = 8000, help = "Approx. size of training dataset")
+parser.add_argument("--move_files", type = bool, default = True, help = "Sort into testing and training files")
+parser.add_argument("--training_size", type = int, default = 1000, help = "Approx. size of training dataset")
 parser.add_argument("--testing_directory", type = str, default = f"{homedir}/neutrino_interaction_CNN/datasets/testing", help = "Testing directory")
 parser.add_argument("--training_directory", type = str, default = f"{homedir}/neutrino_interaction_CNN/datasets/training", help = "Training directory")
 
+parser.add_argument("--random_order", type = bool, default = True, help = "Randomize order of training data")
 args = parser.parse_args()
 torch.manual_seed(args.seed)
 #IMAGE_LOC = args.image_dir
@@ -140,23 +142,24 @@ if args.move_files:
     #print("nuecc", nuecc_shape_list, np.sum(nuecc_shape_list))
     #print("nuenc", nuenc_shape_list, np.sum(nuenc_shape_list))\
     import shutil
-    if os.path.exists("testing/"):
-        shutil.rmtree("testing/")
+    #if os.path.exists("testing/"):
+    #    shutil.rmtree("testing/")
 
-    if os.path.exists("training/"):
-        shutil.rmtree("training/")
-    if not os.path.exists("testing/"):
-        os.makedirs("testing/")
-    if not os.path.exists("training/"):
-        os.makedirs("training/")
+    #if os.path.exists(args.testing_directory):
+    #    shutil.rmtree(args.testing_directory)
 
+    if not os.path.exists(args.testing_directory):
+        os.makedirs(args.testing_directory)
+
+    if not os.path.exists(args.training_directory):
+        os.makedirs(args.training_directory)
     for i in training_data_files:
-        shutil.copy(i, 'training/')
-        shutil.copy(i[:-len("_labels.npy")] + ".npy", 'training/')
+        shutil.copy(i, args.training_directory)
+        shutil.copy(i[:-len("_labels.npy")] + ".npy", args.training_directory)
 
-    for i in testing_data_files:
-        shutil.copy(i, 'testing/')
-        shutil.copy(i[:-len("_labels.npy")] + ".npy", 'testing/')
+    #for i in testing_data_files:
+    #    shutil.copy(i, 'testing/')
+    #    shutil.copy(i[:-len("_labels.npy")] + ".npy", 'testing/')
 
 
 
@@ -178,8 +181,6 @@ elif not args.move_files:
 
 ### get dataloaders with input data
 
-import random
-random.shuffle(training_data_files)
 
 class CustomDataset(Dataset):
     def __init__(self, img_paths, img_labels, size_of_images):
@@ -306,8 +307,9 @@ interaction_type_map = {
 
 for i in interaction_type_map:
     print(i)
-import random
-random.shuffle(training_data_files)
+
+if args.random_order:
+    random.shuffle(training_data_files)
 
 for epoch in range(1,EPOCH_NUMBER+1):
     epoch_loss = 0.0
@@ -317,15 +319,7 @@ for epoch in range(1,EPOCH_NUMBER+1):
     for mypath in training_data_files:
         
         mylabels = np.load(mypath)
-        prev_label = mylabels[0]
 
-        for inttype in interaction_type_map:
-            if inttype in mypath:
-                adjusted_label = interaction_type_map[inttype]
-                continue
-
-        mylabels = [adjusted_label] * len(mylabels)
-        print(f"Changing labels for {mypath} from {prev_label} to {mylabels[0]}")
         current_file =  mypath[:-len("_labels.npy")] + ".npy"
         interaction_data = dataloaders(current_file, mylabels, image_size)
         paths, labels, train_loader = interaction_data.training()
@@ -355,10 +349,16 @@ for epoch in range(1,EPOCH_NUMBER+1):
     TRAIN_LOSS.append(epoch_loss)
     print(f"Loss for epoch #{epoch}:", epoch_loss)
     TRAIN_ACCURACY.append(100 * correct / total)
-    
+    plt.plot(TRAIN_LOSS)
+    plt.xlabel("epoch")
+    plt.ylabel("Loss value")
+    plt.savefig("loss_test_dw.png")
+    plt.close()
     if epoch == 1 or epoch == 3 or epoch == 10 or epoch == 30 or epoch == 100 or epoch == 200 or epoch == 300:
         print(f"Saving model for epoch #{epoch}")
         torch.save(model, f'./{args.model_file}_{args.model_name}_{epoch}.pt') 
+
+
         #with open(f"{args.model_file}_{args.model_name}_{epoch}.txt", "w") as file_info:
         #    for i in nuenc_file_list:
         #        file_info.write(i + '/n')

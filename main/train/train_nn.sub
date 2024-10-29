@@ -1,8 +1,8 @@
-executable = ${HOME}/neutrino_interaction_CNN/singularity_files/singularity_wrapper.sh
-arguments  = ${HOME}/neutrino_interaction_CNN/singularity_files/v14_latest.sif ${HOME}/neutrino_interaction_CNN/main/train/train_model_1 python3.6 ${HOME}/neutrino_interaction_CNN/main/train_nn.py
-output     = dwmodel.out
-error      = dwmodel.err
-log        = dwmodel.log
+executable = /home/$(whoami)/neutrino_interaction_CNN/singularity_files/singularity_wrapper.sh
+arguments  = /home/$(whoami)/neutrino_interaction_CNN/singularity_files/v14_latest.sif /home/$(whoami)/neutrino_interaction_CNN/main/train/train_model_1 python3.6 train_nn.py
+output     = train_nn_cpu.out
+error      = train_nn_cpu.err
+log        = train_nn_cpu.log
 getenv     = True
 
 request_cpus   = 4

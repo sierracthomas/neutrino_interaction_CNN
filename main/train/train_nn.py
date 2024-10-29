@@ -17,15 +17,18 @@ import seaborn as sn
 # import pandas for data management (particularly for large sets of data)
 import pandas as pd
 from model_options import *
-
 import os
 from torchvision.io import read_image
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
-
 from glob import glob
 from PIL import Image
 import random
+import matplotlib
+
+
+
+matplotlib.rcParams.update({'font.size': 22})
 
 homedir = "/home/sthoma31"
 
@@ -48,8 +51,10 @@ parser.add_argument("--move_files", type = bool, default = True, help = "Sort in
 parser.add_argument("--training_size", type = int, default = 1000, help = "Approx. size of training dataset")
 parser.add_argument("--testing_directory", type = str, default = f"{homedir}/neutrino_interaction_CNN/datasets/testing", help = "Testing directory")
 parser.add_argument("--training_directory", type = str, default = f"{homedir}/neutrino_interaction_CNN/datasets/training", help = "Training directory")
-
 parser.add_argument("--random_order", type = bool, default = True, help = "Randomize order of training data")
+
+
+
 args = parser.parse_args()
 torch.manual_seed(args.seed)
 #IMAGE_LOC = args.image_dir
@@ -247,41 +252,13 @@ class dataloaders(Dataset):
 ### get dataloaders with input data
 image_size = 64
 
-import matplotlib.pyplot as plt
-
-dataset_number = 0
-"""
-for mypath in nuenc_file_list:
-    mylabels = np.load(mypath)
-    print(len(mylabels))
-    current_file =  mypath[:-11] + ".npy"
-    interaction_data = dataloaders(current_file, mylabels, image_size)
-    paths, labels, train_loader = interaction_data.training()
-    print(len(paths))
-
-    images, labels = next(iter(train_loader))
-
-    fig, axis = plt.subplots(5, 5, figsize=(15, 10))
-    for i, ax in enumerate(axis.flat):
-        with torch.no_grad():
-            npimg = images[i].numpy()
-
-            npimg = np.transpose(npimg, (2, 1, 0))
-            label = int(labels[i])
-            ax.imshow(npimg, cmap = "Greys_r")
-            ax.set(title = f"{label}")
-
-    plt.savefig(f"test_{dataset_number}.png")
-    plt.close()
-    dataset_number += 1
-    break"""
-
 
 
 
 # initialize model
 model = model_dict[args.model_file](3)
 print(model)
+model.to(device)
 
 
 criterion = nn.CrossEntropyLoss()
@@ -294,7 +271,6 @@ TRAIN_ACCURACY = []
 weights_before = []
 weights_after = []
 
-location = 0
 
 EPOCH_NUMBER = 200
 interaction_type_map = {
@@ -324,8 +300,6 @@ for epoch in range(1,EPOCH_NUMBER+1):
         interaction_data = dataloaders(current_file, mylabels, image_size)
         paths, labels, train_loader = interaction_data.training()
         for data_,target_ in train_loader:
-            #print(location, conv1.weight.data[0])
-            location +=1
             target_ =target_.to(device)
             data_ = data_.to(device)
             
@@ -359,42 +333,5 @@ for epoch in range(1,EPOCH_NUMBER+1):
         torch.save(model, f'./{args.model_file}_{args.model_name}_{epoch}.pt') 
 
 
-        #with open(f"{args.model_file}_{args.model_name}_{epoch}.txt", "w") as file_info:
-        #    for i in nuenc_file_list:
-        #        file_info.write(i + '/n')
-        # save file, save model
-        # make a file to load model, testing data
-        # print all these to have a snapshot as it's training 
-        # number of events trained and tested on 
 
-        # train on 30,000 and while it's training then work on the confusion matrix
-
-    #print(f"Epoch {epoch}: Accuracy: {100 * correct/total}, Loss: {epoch_loss}")
-    #if epoch % plot_frequency == 0:
-    #    actual, predicted = eval_for_confmat(validation_loader, model = model)
-    #    confmat = comp_confmat(actual, predicted)
-    #    plot_confusion_matrix(confmat, f"{png_header}_{epoch}.png")
-    #    torch.save(model, f"./epoch_{epoch}.pt")
-    #    model.train()
-
-
-# In[10]:
-
-
-
-import matplotlib
-matplotlib.rcParams.update({'font.size': 22})
-plt.plot(TRAIN_LOSS)
-plt.xlabel("epoch")
-plt.ylabel("Loss value")
-#plt.yscale("log")
-
-plt.savefig("loss_test_dw.png")
-plt.close()
-
-# In[11]:
-
-
-print(TRAIN_LOSS)
-exit()
 

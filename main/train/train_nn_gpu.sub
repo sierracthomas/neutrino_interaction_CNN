@@ -1,0 +1,11 @@
+executable   = /home/$(whoami)/neutrino_interaction_CNN/main/train/pytorch_wrapper.sh
+
+output       = train_nn_gpu.out
+error        = train_nn_gpu.err
+log          = train_nn_gpu.log
+
+Requirements = CUDADriverVersion >= 12.0
+
++request_gpus = 1
+
+queue 1

@@ -1,8 +1,7 @@
 #!/bin/bash
 
 /usr/local/bin/singularity shell $1 <<EOT
-cd $2
-$3 -u ${@:4}
+$2 -u ${@:3}
 EOT
 
 exit 0

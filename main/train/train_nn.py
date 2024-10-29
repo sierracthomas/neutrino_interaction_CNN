@@ -41,7 +41,7 @@ parser.add_argument("--numu_folder", type = str, default = f"/home/sthoma31/neut
 parser.add_argument("--nue_folder", type = str, default = f"/home/sthoma31/neutrino_interaction_images/array_generator/nue_10_22", nargs='*', help = "Name of folder containing Nue interactions")
 parser.add_argument("--batch_size", type = int, default = 128, help = "Batch size when training")
 #parser.add_argument("--training_data_size", type = int, default = 4000, help = "Size of training data")
-parser.add_argument("--epoch", type = int, default = 20, help = "Number of epochs when training")
+parser.add_argument("--epoch", type = int, default = 300, help = "Number of epochs when training")
 parser.add_argument("--testing_data_size", type = int, default = 100, help = "Size of testing data for each channel ")
 parser.add_argument("--png_header", type = str, default = "trial", help = "Header name for PNG files")
 parser.add_argument("--plot_freq", type = int, default = 5, help = "Plot confusion matrices every {plot_freq} times")
@@ -272,7 +272,7 @@ weights_before = []
 weights_after = []
 
 
-EPOCH_NUMBER = 200
+
 interaction_type_map = {
     'nuecc' : 0, 
     'numucc' : 1, 
@@ -326,7 +326,7 @@ for epoch in range(1,EPOCH_NUMBER+1):
     plt.plot(TRAIN_LOSS)
     plt.xlabel("epoch")
     plt.ylabel("Loss value")
-    plt.savefig("loss_test_dw.png")
+    plt.savefig(f"{png_header}_loss_test_dw.png")
     plt.close()
     if epoch == 1 or epoch == 3 or epoch == 10 or epoch == 30 or epoch == 100 or epoch == 200 or epoch == 300:
         print(f"Saving model for epoch #{epoch}")

@@ -1,5 +1,5 @@
 executable = /home/$(whoami)/neutrino_interaction_CNN/singularity_files/singularity_wrapper.sh
-arguments  = /home/$(whoami)/neutrino_interaction_CNN/singularity_files/v14_latest.sif /home/$(whoami)/neutrino_interaction_CNN/main/train/train_model_1 python3.6 train_nn.py
+arguments  = /home/$(whoami)/neutrino_interaction_CNN/singularity_files/v14_latest.sif python3.6 /home/$(whoami)/neutrino_interaction_CNN/main/train/train_nn.py
 output     = train_nn_cpu.out
 error      = train_nn_cpu.err
 log        = train_nn_cpu.log

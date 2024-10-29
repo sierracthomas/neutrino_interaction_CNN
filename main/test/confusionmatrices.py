@@ -20,16 +20,45 @@ from torchvision.io import read_image
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 import torch.nn.functional as F
-from glob import glob
-from PIL import Image
+import glob
+
 import argparse
 
+
+import shutil
+
+
+# just copy model file here and import it...  
+homedir = os.path.expanduser('~')
+shutil.copy(f'{homedir}/neutrino_interaction_CNN/main/train/model_options.py', ".")
+import model_options
+
 parser = argparse.ArgumentParser(description='Generate confusion matrices', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--testing", type = str, default = "../../datasets/testing/", help = "Testing directory")
-parser.add_argument("--training", type = str, default = "../../datasets/training/", help = "Training directory")
+
+parser.add_argument("--testing", type = str, default = f"{homedir}/neutrino_interaction_CNN/datasets/testing", help = "Testing directory")
+parser.add_argument("--training", type = str, default = f"{homedir}/neutrino_interaction_CNN/datasets/training", help = "Training directory")
+parser.add_argument("--model_directory", type = str, default = f"{homedir}/neutrino_interaction_CNN/main/train", help = "Path to directory with models")
+parser.add_argument("--device", type = str, default = "CPU", help = "device to run file on")
 args = parser.parse_args()
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+if args.device == "GPU":
+    if torch.cuda.is_available():
+        print("Using GPU")
+        print(torch.cuda.device_count())
+        device = torch.device("cuda")
+    else:
+        print("Using CPU - exiting program...")
+        device = torch.device("cpu")
+        exit()
+
+elif args.device == "CPU":
+    print("Using CPU - exiting program...")
+    device = torch.device("cpu")
+
+
+
+
 criterion = nn.CrossEntropyLoss()
 
 
@@ -43,16 +72,16 @@ if get_paths:
     training_data_files = []
     # get lengths of arrays in advance!
     for filename in os.listdir(args.testing):
-        f = os.path.join(os.getcwd(), args.testing + filename)
+        f = os.path.join(args.testing, filename)
         if os.path.isfile(f):
             if f[-len("labels.npy"):] == "labels.npy":
                 testing_data_files.append(f)
     for filename in os.listdir(args.training):
-        f = os.path.join(os.getcwd(), args.training + filename)
+        f = os.path.join(args.training, filename)
         if os.path.isfile(f):
             if f[-len("labels.npy"):] == "labels.npy":
                 training_data_files.append(f)
-
+print(args.testing)
 
 ### get dataloaders with input data
 
@@ -79,28 +108,15 @@ class CustomDataset(Dataset):
         if self.shorten:
             return len(self.opened_labels) - self.shorten
     def __getitem__(self, index):
-        #self.opened_data = np.load(self.img_paths)
-        #self.opened_data = np.array(self.opened_data, dtype = float)
-        #
-        #self.opened_data = self.opened_data.reshape((len(self.img_labels), 1, 64, 64))
 
-       #self.opened_data = np.memmap(self.img_paths, dtype='float32', mode='r', shape = (self.img_labels[index], 3, self.size_of_images, self.size_of_images)).__array__()
-        # only one array
-        #self.opened_labels = np.load(self.img_paths[:-4] + "_labels.npy")
-        #self.opened_labels = np.load(self.img_paths[:-4] + "_labels.npy")
         self.opened_data = np.load(self.img_paths)
         self.opened_data = self.opened_data[:,2,:,:]
         self.opened_data = np.reshape(self.opened_data, (len(self.opened_labels), 1, 64, 64))
         self.input_data = torch.Tensor(self.opened_data)
 
         tensor = self.input_data[index]#[0]
-        #label = np.memmap(self.img_paths, dtype='float32', mode='r', shape = (self.img_labels[index], 3, self.size_of_images, self.size_of_images)).__array__()
-
-
         label = self.opened_labels[index]
-        #PIL_IMAGE = Image.open(self.img_paths[index]).resize(self.size_of_images)
-        #TENSOR_IMAGE = transform(PIL_IMAGE)
-        #label = self.img_labels[index]
+
         return tensor, label
 
 class dataloaders(Dataset):
@@ -204,10 +220,6 @@ def plot_confusion_matrix(confusion_matrix, savepic):
     
 
 
-from fpdf import FPDF
-from PIL import Image
-import glob
-import os
 
 
 import re
@@ -219,34 +231,23 @@ def numericalSort(value):
 
 
 current_model_list = []
-for infile in sorted(glob.glob('*.pt'), key=numericalSort):
-    print("Current File Being Processed is: ", infile)
+for infile in sorted(glob.glob(f'{args.model_directory}/*.pt'), key=numericalSort):
     current_model_list.append(infile)
 
 for current_model in current_model_list:
-    #current_model = "modeldw_run_number_1_30.pt"
+    print("Current File Being Processed is: ", current_model)
     model = torch.load(current_model)
+    model.to(device)
     optimizer = optim.RMSprop(model.parameters(),lr=1e-4)
     print(model)
     allactual, allpredicted = [], []
+    
     for mypath in testing_data_files:
+        print(mypath)
         mylabels = np.load(mypath)
-        prev_label = mylabels[0]
-
-        for inttype in interaction_type_map:
-            if inttype in mypath:
-                adjusted_label = interaction_type_map[inttype]
-                continue
-        mylabels = [adjusted_label] * len(mylabels)
-
-        print(f"Changing labels for {mypath} from {prev_label} to {mylabels[0]}")
         print(len(mylabels))
         current_file =  mypath[:-len("_labels.npy")] + ".npy"
-        if "nuenc_h5.0000009_1_labels.npy" in mypath:
-            #mylabels = mylabels[:-19]
-            interaction_data = dataloaders(current_file, mylabels, image_size, shorten = 19)
-        else:
-            interaction_data = dataloaders(current_file, mylabels, image_size)
+        interaction_data = dataloaders(current_file, mylabels, image_size)
         paths, labels, train_loader = interaction_data.training()
         actual, predicted = eval_for_confmat(train_loader, model)
         allactual.append(np.hstack(actual))
@@ -256,4 +257,3 @@ for current_model in current_model_list:
     plot_confusion_matrix(conf, f"{str(current_model)[:-3]}_confmat.png")
     
 
-exit()

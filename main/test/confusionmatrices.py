@@ -236,8 +236,7 @@ for infile in sorted(glob.glob(f'{args.model_directory}/*.pt'), key=numericalSor
 
 for current_model in current_model_list:
     print("Current File Being Processed is: ", current_model)
-    model = torch.load(current_model)
-    model.to(device)
+    model = torch.load(current_model, map_location=device)
     optimizer = optim.RMSprop(model.parameters(),lr=1e-4)
     print(model)
     allactual, allpredicted = [], []

@@ -20,7 +20,7 @@ parser.add_argument("--length_in_filename", type = bool, default = False, help =
 
 args = parser.parse_args()
 save_after_n_interactions = 500
-desired_interaction = args.interaction_type
+desired_interaction = "gamma"#args.interaction_type
 working_directory = args.directory
 out_directory = args.out_directory
 
@@ -92,7 +92,7 @@ for current_file in hdf5_list:
     segbreaks = []
 
     label_list = []
-    save_label = interaction_type_map[desired_interaction]
+    save_label = "gammas"#interaction_type_map[desired_interaction]
 
     vstart = 0
     segbreaks.append(0)
@@ -121,41 +121,42 @@ for current_file in hdf5_list:
     
     # files saved already in this batch
     number_of_save_files = 0
-    if not check_particle[desired_interaction](j):
-        print("Wrong particle type. ")
-        sys.exit()
+    #if not check_particle[desired_interaction](j):
+    #    print("Wrong particle type. ")
+    #    sys.exit()
 
     print("range: ", range(len(segbreaks) - 1))
     last_event_in_file = range(len(segbreaks) - 1)[-1]
     for num in range(len(segbreaks) - 1): 
         
         print(num, "last number: ", last_event_in_file)
-        print(inverse_reaction_map[myfile['mc_hdr'][j][7]])
+        #print(inverse_reaction_map[myfile['mc_hdr'][j][7]])
 
-        print(f"event is {myfile['mc_hdr'][j][0]}")
-        print(f"pdg is {myfile['mc_hdr'][j]['nu_pdg']}")
+        #print(f"event is {myfile['mc_hdr'][j][0]}")
+        #print(f"pdg is {myfile['mc_hdr'][j]['nu_pdg']}")
         
-        if num != last_event_in_file:
+        #if num != last_event_in_file:
+        #    continue
         # if interaction is not QES and not the last one in file, keep going
-            if inverse_reaction_map[myfile['mc_hdr'][j][7]] != "QES": 
-                j += 1
-                print("Skipping non-QES...")
-                print("-------------------- \n")
-                continue
+            #if inverse_reaction_map[myfile['mc_hdr'][j][7]] != "QES": 
+            #    j += 1
+            #    print("Skipping non-QES...")
+            #    print("-------------------- \n")
+            #    continue
 
             # if interaction is wrong and not the last one in file, keep going
-            if not check_type[desired_interaction](num): 
-                print(f"Not {desired_interaction}, skipping...")
-                print("-------------------- \n")
-                j += 1
-                continue
+            #if not check_type[desired_interaction](num): 
+            #    print(f"Not {desired_interaction}, skipping...")
+            #    print("-------------------- \n")
+            #    j += 1
+            #    continue
 
         # if this is the last event in file, save previous events that meet specifications
-        elif num == last_event_in_file:
+        if num == last_event_in_file:
             # just in case there's no desired interaction, don't try to save anything 
             if len(label_list) == 0:
                 continue
-            if inverse_reaction_map[myfile['mc_hdr'][j][7]] != "QES" or not check_type[desired_interaction](num):
+            if True:#inverse_reaction_map[myfile['mc_hdr'][j][7]] != "QES" or not check_type[desired_interaction](num):
                 print("Last event, not desired interaction ", len(label_list))
 
                 print(len(label_list), "Saving...")
@@ -177,8 +178,8 @@ for current_file in hdf5_list:
                 # continue j iteration
                 j += 1
                 continue
-        for k in range(7,15):
-            print(mc_hdr[k], myfile['mc_hdr'][j][k])
+        #for k in range(7,15):
+        #    print(mc_hdr[k], myfile['mc_hdr'][j][k])
 
         x = myfile['segments']['x_end'][segbreaks[num]:segbreaks[num + 1]]
         y = myfile['segments']['y_end'][segbreaks[num]:segbreaks[num + 1]]
